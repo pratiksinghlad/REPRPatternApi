@@ -11,6 +11,10 @@ using REPRPatternApi;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
+builder.Configuration.AddJsonFile("secrets/appsettings.secrets.json", true, true);
+builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddScoped<IProductService, ProductService>();

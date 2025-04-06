@@ -12,7 +12,7 @@ The REPR (Request-Endpoint-Response) pattern is a design approach for organizing
 
 This repository demonstrates the **REPR (Request-Endpoint-Response)** pattern using **.NET 8**. It also features **OpenAPI documentation** for seamless exploration and understanding of the API. **HTTP/3/2/1** fallback code supports **Brotli** compression and falls back to **Gzip** for **response compression**.
 
-![cqrs_pattern](./Screenshots/CQRS_Pattern.jpg)
+![cqrs_pattern](./Screenshots/REPR_Pattern.jpg)
 
 # Project structure / technology
 * .NET 8: Technology
