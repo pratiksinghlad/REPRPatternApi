@@ -20,27 +20,15 @@ public static class EndpointExtensions
         return services;
     }
 
-    //public static IApplicationBuilder MapEndpoints(this WebApplication app, RouteGroupBuilder? routeGroupBuilder = null)
-    //{
-    //    IEnumerable<IEndpoint> endpoints = app.Services.GetRequiredService<IEnumerable<IEndpoint>>();
-
-    //    IEndpointRouteBuilder builder = routeGroupBuilder is null ? app : routeGroupBuilder;
-
-    //    foreach (IEndpoint endpoint in endpoints)
-    //    {
-    //        endpoint.MapEndpoint(builder);
-    //    }
-
-    //    return app;
-    //}
-
-    public static RouteGroupBuilder MapEndpoints(this RouteGroupBuilder routeGroupBuilder, IServiceProvider services)
+    public static void MapEndpoints(this IEndpointRouteBuilder endpoints, RouteGroupBuilder group)
     {
-        IEnumerable<IEndpoint> endpoints = services.GetRequiredService<IEnumerable<IEndpoint>>();
-        foreach (IEndpoint endpoint in endpoints)
+        var endpointTypes = Assembly.GetExecutingAssembly().GetTypes()
+            .Where(t => typeof(IEndpoint).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+
+        foreach (var type in endpointTypes)
         {
-            endpoint.MapEndpoint(routeGroupBuilder);
+            var endpointInstance = (IEndpoint)Activator.CreateInstance(type)!;
+            endpointInstance.MapEndpoint(group);
         }
-        return routeGroupBuilder;
     }
 }

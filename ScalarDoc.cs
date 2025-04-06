@@ -1,6 +1,6 @@
-namespace REPRPatternApi;
+﻿namespace REPRPatternApi;
 
-public partial class Startup
+public class ScalarDoc
 {
     /// <summary>
     /// Load Scalar settings
@@ -23,7 +23,7 @@ public partial class Startup
     /// Add Scalar to the hosted service
     /// </summary>
     /// <param name="app"></param>
-    public static void UseScalar(ref IApplicationBuilder app)
+    public static void UseScalar(ref WebApplication app)
     {
         app.UseOpenApi(options =>
         {

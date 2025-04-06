@@ -1,5 +1,4 @@
-﻿
-using REPRPatternApi.Endpoints;
+﻿using REPRPatternApi.Endpoints;
 
 namespace MinimalEndpoints.Endpoints;
 
