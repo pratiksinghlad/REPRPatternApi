@@ -1,6 +1,4 @@
-﻿using REPRPatternApi.Endpoints;
-
-namespace MinimalEndpoints.Endpoints;
+﻿namespace REPRPatternApi.Endpoints.ExampleHttpVerbs;
 
 public class Put : IEndpoint
 {
