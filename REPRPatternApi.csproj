@@ -7,10 +7,15 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
     <EnableSourceGeneration>true</EnableSourceGeneration>
-    <WarningsAsErrors>CS0219;CS0162</WarningsAsErrors> <!-- Treat unused variable warnings as errors and Unreachable Code after a retur -->
+    <WarningsAsErrors>CS0169;CS0219;CS0162</WarningsAsErrors> <!-- CS0169 PRIVATE MEMBER Treat unused variable warnings as errors and Unreachable Code after a retur -->
+    <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
+    <UseHotReload>true</UseHotReload>
+    
+    
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
