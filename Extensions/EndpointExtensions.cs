@@ -22,6 +22,8 @@ public static class EndpointExtensions
 
     public static void MapEndpoints(this IEndpointRouteBuilder endpoints, RouteGroupBuilder group)
     {
+        var _ = endpoints;
+
         var endpointTypes = Assembly.GetExecutingAssembly().GetTypes()
             .Where(t => typeof(IEndpoint).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
 

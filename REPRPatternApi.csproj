@@ -7,6 +7,7 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
     <EnableSourceGeneration>true</EnableSourceGeneration>
+    <WarningsAsErrors>CS0219;CS0162</WarningsAsErrors> <!-- Treat unused variable warnings as errors and Unreachable Code after a retur -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +16,14 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.3.0" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="D:\Code\DotNet\REPRPatternApi\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="D:\Code\DotNet\REPRPatternApi\.editorconfig" />
   </ItemGroup>
 
 </Project>

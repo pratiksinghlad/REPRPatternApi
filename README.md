@@ -7,6 +7,7 @@
 ![HTTP3](https://img.shields.io/badge/HTTP%203-v3.0-brightgreen)
 ![HTTP2](https://img.shields.io/badge/HTTP%202-v2.0-blue)
 ![HTTP1](https://img.shields.io/badge/HTTP%201-v1.1-orange)
+![editorconfig](https://img.shields.io/badge/-Editor_Config-000?style=flat&logo=editorconfig&logoColor=white)
 
 The REPR (Request-Endpoint-Response) pattern is a design approach for organizing APIs in .NET Core applications. Unlike traditional MVC or REST-based patterns, REPR focuses on defining APIs around endpoints instead of controllers, offering improved modularity, maintainability, and scalability.
 
