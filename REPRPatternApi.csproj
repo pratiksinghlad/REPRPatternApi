@@ -7,12 +7,19 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
     <EnableSourceGeneration>true</EnableSourceGeneration>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <WarningsAsErrors>CS0169;CS0219;CS0162</WarningsAsErrors> <!-- CS0169 PRIVATE MEMBER Treat unused variable warnings as errors and Unreachable Code after a retur -->
     <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
     <UseHotReload>true</UseHotReload>
     
-    
   </PropertyGroup>
+ <!--Benefit: Enforces architectural rules at build time.
+      Add a custom MSBuild task to validate project invariants (e.g., no banned namespaces).-->
+
+  <!--<UsingTask TaskName="CheckBannedNamespaces" AssemblyFile="CustomTasks.dll" />
+  <Target Name="ValidateCode" BeforeTargets="Build">
+    <CheckBannedNamespaces BannedNamespaces="System.IO" />
+  </Target>-->
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />

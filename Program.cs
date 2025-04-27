@@ -125,7 +125,7 @@ app.UseEndpoints(endpoints =>
 
 app.UseCookiePolicy();
 app.UseHttpsRedirection();
-app.Run();
+await app.RunAsync();
 
 
 

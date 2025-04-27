@@ -324,3 +324,4 @@ dotnet_diagnostic.IDE0052.severity = error  # Unread private members
 dotnet_diagnostic.IDE0005.severity = error  # Remove unnecessary using directives
 dotnet_diagnostic.CS8600.severity = error  # Converting null to non-nullable type
 dotnet_diagnostic.CS8602.severity = error  # Dereference of a possibly null reference
+dotnet_diagnostic.CA2000.severity = error  # Dispose objects before losing scope
