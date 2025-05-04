@@ -8,6 +8,7 @@ using REPRPatternApi.Models.Responses;
 using System.Text.Json.Serialization;
 using REPRPatternApi.Services;
 using REPRPatternApi;
+using REPRPatternApi.Models;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +69,8 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
+builder.Services.AddExternalApiHttpClient(builder.Configuration.GetValue<string>("ExternalApiSettings:BaseUrl"));
+
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
 // Configure JSON options to use the generated context
@@ -78,6 +81,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddResponseCaching();
+
+builder.Services.Configure<ExternalApiSettings>(builder.Configuration.GetSection(nameof(ExternalApiSettings)));
 
 ScalarDoc.LoadScalar(builder.Services);
 
@@ -90,6 +95,27 @@ builder.Services.AddApiVersioning(options => options.ReportApiVersions = true);
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
 WebApplication app = builder.Build();
+
+// Add this security middleware to remove server headers
+app.Use(async (context, next) =>
+{
+    // Remove server header
+    context.Response.Headers.Remove("Server");
+    
+    // Remove X-Powered-By header
+    context.Response.Headers.Remove("X-Powered-By");
+    
+    // Remove X-AspNet-Version header
+    context.Response.Headers.Remove("X-AspNet-Version");
+    
+    // Remove other ASP.NET Core specific headers
+    context.Response.Headers.Remove("X-SourceFiles");
+    
+    // Prevent from exposing .NET CLR version
+    context.Response.Headers.Remove("X-Runtime");
+    
+    await next.Invoke();
+});
 
 ApiVersionSet apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1))

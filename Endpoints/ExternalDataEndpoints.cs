@@ -16,7 +16,7 @@ public class ExternalDataEndpoints : IEndpoint
     private async Task<IResult> GetExternalDataAsync(IExternalApiService externalApiService)
     {
         // Call the external API with resilience policies
-        var data = await externalApiService.GetAsync<YourResponseModel>("https://api.github.com/users/octocat");
+        var data = await externalApiService.GetAsync<YourResponseModel>();
         return Results.Ok(data);
     }
 }

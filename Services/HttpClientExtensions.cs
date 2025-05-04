@@ -1,6 +1,8 @@
 using System.Net;
 using Polly;
 using Polly.Extensions.Http;
+using REPRPatternApi.Constants;
+using REPRPatternApi.Services;
 
 namespace REPRPatternApi.Extensions;
 
@@ -9,12 +11,14 @@ public static class HttpClientExtensions
     public static IServiceCollection AddExternalApiHttpClient(this IServiceCollection services, string baseApiUrl)
     {
         // Register the named HttpClient with policies
-        services.AddHttpClient("ExternalApi", client =>
+        services.AddHttpClient(ApiConstants.ExternalApiClientName, client =>
             {
                 client.BaseAddress = new Uri(baseApiUrl);
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
             })
             .AddPolicyHandler(GetRetryPolicy());
+        
+        services.AddScoped<IExternalApiService, ExternalApiService>(); // <--- Add the service to the DI container>
 
         return services;
     }

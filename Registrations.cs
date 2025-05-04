@@ -22,5 +22,6 @@ public class Registrations : Module
     private static void RegisterService(ref ContainerBuilder builder)
     {
         builder.RegisterType<ProductService>().AsImplementedInterfaces();
+        builder.RegisterType<ExternalApiService>().AsImplementedInterfaces();
     }
 }
