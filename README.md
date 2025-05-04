@@ -13,6 +13,8 @@ The REPR (Request-Endpoint-Response) pattern is a design approach for organizing
 
 This repository demonstrates the **REPR (Request-Endpoint-Response)** pattern using **.NET 9**. It also features **OpenAPI documentation** for seamless exploration and understanding of the API. **HTTP/3/2/1** fallback code supports **Brotli** compression and falls back to **Gzip** for **response compression**.
 
+Polly for http client call to other services with **Retry** and **Circuit Breaker** policies.
+
 ![cqrs_pattern](./Screenshots/REPR_Pattern.jpg)
 
 # Project structure / technology
@@ -22,6 +24,7 @@ This repository demonstrates the **REPR (Request-Endpoint-Response)** pattern us
 The executing code runs from these projects.
 
 ## Libraries:
-- **OpenAPI Documentation**: Automatically generated API documentation using OpenAPI for better understanding and testing of the 
+- **OpenAPI Documentation**: Automatically generated API documentation using OpenAPI for better understanding and testing of the
+- **Polly**: Polly is a .NET resilience and transient-fault-handling library that allows developers to express resilience strategies such as Retry, Circuit Breaker, Hedging, Timeout, Rate Limiter and Fallback in a fluent and thread-safe manner.
 API.
 - **Scalar**: Replaces Swagger for calling and testing APIs.
