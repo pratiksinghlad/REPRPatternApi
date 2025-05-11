@@ -6,12 +6,23 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <InvariantGlobalization>true</InvariantGlobalization>
     <PublishAot>true</PublishAot>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
     <EnableSourceGeneration>true</EnableSourceGeneration>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <WarningsAsErrors>CS0169;CS0219;CS0162</WarningsAsErrors> <!-- CS0169 PRIVATE MEMBER Treat unused variable warnings as errors and Unreachable Code after a retur -->
     <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
     <UseHotReload>true</UseHotReload>
-    
+    <OutputPath>$(MSBuildProjectDirectory)\publish\$(RuntimeIdentifier)</OutputPath>
+  </PropertyGroup>
+
+  <!-- Platform-specific configurations -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <DefineConstants>WINDOWS</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+    <DefineConstants>LINUX</DefineConstants>
   </PropertyGroup>
  <!--Benefit: Enforces architectural rules at build time.
       Add a custom MSBuild task to validate project invariants (e.g., no banned namespaces).-->
