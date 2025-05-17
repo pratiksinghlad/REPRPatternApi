@@ -1,166 +1,182 @@
-using Asp.Versioning.Builder;
+using System.IO.Compression;
+using System.Text.Json.Serialization;
 using Asp.Versioning;
-using REPRPatternApi.Extensions;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
-using Scalar.AspNetCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using REPRPatternApi.Extensions;
+using REPRPatternApi.Models;
 using REPRPatternApi.Models.Requests;
 using REPRPatternApi.Models.Responses;
-using System.Text.Json.Serialization;
 using REPRPatternApi.Services;
-using REPRPatternApi;
-using REPRPatternApi.Models;
+using Scalar.AspNetCore;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true);
-builder.Configuration.AddJsonFile("secrets/appsettings.secrets.json", true, true);
-builder.Configuration.AddEnvironmentVariables();
-builder.Services.AddEndpointsApiExplorer();
+// Configuration
+builder.Configuration
+    .AddJsonFile("appsettings.json", false, true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
+    .AddJsonFile("secrets/appsettings.secrets.json", true, true)
+    .AddEnvironmentVariables();
 
-builder.Services.AddScoped<IProductService, ProductService>();
+// API versioning
+builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1);
+        options.ApiVersionReader = new UrlSegmentApiVersionReader();
+        options.ReportApiVersions = true;
+    })
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'V";
+        options.SubstituteApiVersionInUrl = true;
+    });
 
+// Memory cache and distributed cache for response caching
+builder.Services.AddMemoryCache();
+builder.Services.AddResponseCaching();
+builder.Services.AddDistributedMemoryCache();
+
+// Compression (Brotli and Gzip)
 builder.Services.AddResponseCompression(options =>
 {
-    options.EnableForHttps = true; // This is important for https, by default it is disabled for https.
+    options.EnableForHttps = true;
     options.Providers.Add<BrotliCompressionProvider>();
     options.Providers.Add<GzipCompressionProvider>();
-    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-    new[] {
-        "application/json",
-        "application/javascript",
-        "text/css",
-        "text/html",
-        "text/json",
-        "text/plain",
-        "text/xml"
-    });
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+        {
+            "application/json",
+            "application/javascript",
+            "text/css",
+            "text/html",
+            "text/json",
+            "text/plain",
+            "text/xml",
+        });
 });
 
 builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
 {
-    options.Level = System.IO.Compression.CompressionLevel.Fastest;
+    options.Level = CompressionLevel.Fastest;
 });
 
 builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 {
-    options.Level = System.IO.Compression.CompressionLevel.Fastest;
+    options.Level = CompressionLevel.Fastest;
 });
 
-builder.Services.AddEndpoints(typeof(Program).Assembly);
+// Health checks
+builder.Services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy());
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-        .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
+// Core services
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.Configure<ExternalApiSettings>(
+    builder.Configuration.GetSection(nameof(ExternalApiSettings)));
 
-builder.Services.AddApiVersioning(options =>
-{
-    options.DefaultApiVersion = new ApiVersion(1);
-    options.ApiVersionReader = new UrlSegmentApiVersionReader();
-}).AddApiExplorer(options =>
-{
-    options.GroupNameFormat = "'v'V";
-    options.SubstituteApiVersionInUrl = true;
-});
-
-builder.Services.AddExternalApiHttpClient(builder.Configuration.GetValue<string>("ExternalApiSettings:BaseUrl"));
-
-builder.Services.AddEndpoints(typeof(Program).Assembly);
-
-// Configure JSON options to use the generated context
+// JSON configuration
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddResponseCaching();
+// CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", 
+        policy => policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
 
-builder.Services.Configure<ExternalApiSettings>(builder.Configuration.GetSection(nameof(ExternalApiSettings)));
+// Register application services
+builder.Services.AddExternalApiHttpClient(
+    builder.Configuration.GetValue<string>("ExternalApiSettings:BaseUrl")!);
 
-ScalarDoc.LoadScalar(builder.Services);
+builder.Services.AddScoped<IProductService, ProductService>();
 
-// Health checks should be added later
-//LoadHealthChecks(builder.Services);
-
-builder.Services.AddMemoryCache();
-builder.Services.AddApiVersioning(options => options.ReportApiVersions = true);
-
+// Add endpoints from assembly
 builder.Services.AddEndpoints(typeof(Program).Assembly);
 
-WebApplication app = builder.Build();
-
-// Add this security middleware to remove server headers
-app.Use(async (context, next) =>
+// Documentation
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApiDocument(config =>
 {
-    // Remove server header
-    context.Response.Headers.Remove("Server");
-    
-    // Remove X-Powered-By header
-    context.Response.Headers.Remove("X-Powered-By");
-    
-    // Remove X-AspNet-Version header
-    context.Response.Headers.Remove("X-AspNet-Version");
-    
-    // Remove other ASP.NET Core specific headers
-    context.Response.Headers.Remove("X-SourceFiles");
-    
-    // Prevent from exposing .NET CLR version
-    context.Response.Headers.Remove("X-Runtime");
-    
-    await next.Invoke();
+    config.Title = "API Documentation";
+    config.Version = "v1";
+    config.Description = "API Documentation using Scalar";
+    config.DocumentName = "v1";
 });
 
-ApiVersionSet apiVersionSet = app.NewApiVersionSet()
+var app = builder.Build();
+
+// Security headers middleware
+app.Use(async (context, next) =>
+    {
+        context.Response.Headers.Remove("Server");
+        context.Response.Headers.Remove("X-Powered-By");
+        context.Response.Headers.Remove("X-AspNet-Version");
+        context.Response.Headers.Remove("X-SourceFiles");
+        context.Response.Headers.Remove("X-Runtime");
+    
+        // Add security headers
+        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        context.Response.Headers["X-Frame-Options"] = "DENY";
+        context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+        context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    
+        await next.Invoke();
+    });
+
+// Middleware pipeline
+app.UseResponseCompression();
+app.UseResponseCaching();
+app.UseStatusCodePages();
+app.UseRouting();
+app.UseCors("AllowAll");
+app.UseHttpsRedirection();
+
+// Configure API versioning
+var apiVersionSet = app.NewApiVersionSet()
     .HasApiVersion(new ApiVersion(1))
     .ReportApiVersions()
     .Build();
 
-RouteGroupBuilder versionedGroup = app
-    .MapGroup("api/v{version:apiVersion}")
+var versionedGroup = app.MapGroup("api/v{version:apiVersion}")
     .WithApiVersionSet(apiVersionSet);
 
+// Map endpoints
 app.MapEndpoints(versionedGroup);
 
-app.UseResponseCompression();
-app.UseStatusCodePages();
-app.UseRouting();
-app.UseCors("AllowAll");
+// Map health checks
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = _ => true });
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 
-ScalarDoc.UseScalar(ref app);
+// Configure OpenAPI and documentation
+app.UseOpenApi(options => options.Path = "/openapi/v1.json");
 
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapScalarApiReference(opt =>
     {
         opt.Title = $"REPR Pattern Api Documentation - {app.Environment.EnvironmentName}";
-        if (app.Environment.IsDevelopment())
-            opt.Theme = ScalarTheme.DeepSpace;
-        else if (app.Environment.IsStaging())
-            opt.Theme = ScalarTheme.BluePlanet;
-        else
-            opt.Theme = ScalarTheme.Purple;
+        opt.Theme = app.Environment.IsDevelopment() 
+            ? ScalarTheme.DeepSpace 
+            : app.Environment.IsStaging() 
+                ? ScalarTheme.BluePlanet 
+                : ScalarTheme.Purple;
     });
 });
 
-app.UseCookiePolicy();
-app.UseHttpsRedirection();
 await app.RunAsync();
 
-
-
+// Source generation for JSON serialization
 [JsonSerializable(typeof(UpdateProductRequest))]
 [JsonSerializable(typeof(CreateProductRequest))]
 [JsonSerializable(typeof(ProductResponse))]
 [JsonSerializable(typeof(ProductsResponse))]
 [JsonSerializable(typeof(ErrorResponse))]
 [JsonSerializable(typeof(Dictionary<string, string[]>))]
-public partial class AppJsonSerializerContext : JsonSerializerContext
-{
-}
+public partial class AppJsonSerializerContext : JsonSerializerContext { }

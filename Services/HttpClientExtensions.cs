@@ -1,6 +1,7 @@
 using System.Net;
 using Polly;
 using Polly.Extensions.Http;
+using Polly.Timeout;
 using REPRPatternApi.Constants;
 using REPRPatternApi.Services;
 
@@ -10,15 +11,17 @@ public static class HttpClientExtensions
 {
     public static IServiceCollection AddExternalApiHttpClient(this IServiceCollection services, string baseApiUrl)
     {
-        // Register the named HttpClient with policies
         services.AddHttpClient(ApiConstants.ExternalApiClientName, client =>
             {
                 client.BaseAddress = new Uri(baseApiUrl);
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
+                client.Timeout = TimeSpan.FromSeconds(30);
             })
-            .AddPolicyHandler(GetRetryPolicy());
-        
-        services.AddScoped<IExternalApiService, ExternalApiService>(); // <--- Add the service to the DI container>
+            .AddPolicyHandler(GetRetryPolicy())
+            .AddPolicyHandler(GetCircuitBreakerPolicy())
+            .AddPolicyHandler(GetTimeoutPolicy());
+
+        services.AddScoped<IExternalApiService, ExternalApiService>();
 
         return services;
     }
@@ -27,14 +30,58 @@ public static class HttpClientExtensions
     {
         return HttpPolicyExtensions
             .HandleTransientHttpError()
-            .OrResult(msg => msg.StatusCode == HttpStatusCode.TooManyRequests || msg.StatusCode == HttpStatusCode.Forbidden) // 429 Too Many Requests
+            .Or<TimeoutRejectedException>()
+            .OrResult(msg => msg.StatusCode == HttpStatusCode.TooManyRequests)
             .WaitAndRetryAsync(
-                retryCount: 3, // Number of retries
-                sleepDurationProvider: retryAttempt =>
-                    TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)), // Exponential backoff: 2, 4, 8 seconds
-                onRetry: (outcome, timespan, retryCount, context) =>
+                3,
+                retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                onRetry: (exception, sleepDuration, attemptNumber, context) =>
                 {
-                    Console.WriteLine($"Retry {retryCount} encountered an error: {outcome.Exception?.Message}. Waiting {timespan} before next retry.");
+                    var serviceProvider = context.GetServiceProvider();
+                    var logger = serviceProvider?.GetService<ILogger<HttpClient>>();
+                    logger?.LogWarning(
+                        exception.Exception,
+                        "Error {ExceptionMessage} on attempt {AttemptNumber}. Waiting {SleepDuration} before next retry.",
+                        exception.Exception?.Message,
+                        attemptNumber,
+                        sleepDuration);
                 });
+    }
+
+    private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
+    {
+        return HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .Or<TimeoutRejectedException>()
+            .CircuitBreakerAsync(
+                handledEventsAllowedBeforeBreaking: 5,
+                durationOfBreak: TimeSpan.FromSeconds(30),
+                onBreak: (exception, duration, context) =>
+                {
+                    var serviceProvider = context.GetServiceProvider();
+                    var logger = serviceProvider?.GetService<ILogger<HttpClient>>();
+                    logger?.LogWarning(
+                        "Circuit breaker opened for {Duration} due to: {ExceptionMessage}",
+                        duration,
+                        exception.Exception?.Message);
+                },
+                onReset: context =>
+                {
+                    var serviceProvider = context.GetServiceProvider();
+                    var logger = serviceProvider?.GetService<ILogger<HttpClient>>();
+                    logger?.LogInformation("Circuit breaker reset");
+                });
+    }
+
+    private static IAsyncPolicy<HttpResponseMessage> GetTimeoutPolicy()
+    {
+        return Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(30));
+    }
+
+    private static IServiceProvider? GetServiceProvider(this Context context)
+    {
+        return context.TryGetValue("ServiceProvider", out var serviceProvider) 
+            ? serviceProvider as IServiceProvider 
+            : null;
     }
 }

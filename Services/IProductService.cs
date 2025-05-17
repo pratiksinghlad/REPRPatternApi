@@ -5,9 +5,9 @@ namespace REPRPatternApi.Services;
 
 public interface IProductService
 {
-    Task<IEnumerable<ProductResponse>> GetAllProductsAsync();
-    Task<ProductResponse?> GetProductByIdAsync(int id);
-    Task<ProductResponse> CreateProductAsync(CreateProductRequest request);
-    Task<ProductResponse?> UpdateProductAsync(UpdateProductRequest request);
-    Task<bool> DeleteProductAsync(int id);
+    ValueTask<IEnumerable<ProductResponse>> GetAllProductsAsync();
+    ValueTask<ProductResponse?> GetProductByIdAsync(int id);
+    ValueTask<ProductResponse> CreateProductAsync(CreateProductRequest request);
+    ValueTask<ProductResponse?> UpdateProductAsync(UpdateProductRequest request);
+    ValueTask<bool> DeleteProductAsync(int id);
 }
