@@ -1,49 +1,49 @@
 name: Deploy to Azure with OIDC on Main Merge
 
 on:
-  pull_request:
-    types:
-      - closed # Trigger when a pull request is closed
+  push:
     branches:
-      - main   # Only for pull requests targeting the main branch
+      - main
 
 permissions:
-  id-token: write  # Required for OIDC
+  id-token: write
   contents: read
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '9.0.x'
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Build and Publish
-      run: |
-        dotnet publish -c Release -o ./publish
-        cd ./publish
-        zip -r ../deploy.zip ./*
+      - name: Build & Publish
+        run: |
+          dotnet publish -c Release -o ./publish
+          cd publish
+          zip -r ../deploy.zip ./*
 
-    - name: Azure Login (OIDC)
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id:        ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:        ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id:  ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Deploy to Azure Web App
-      run: |
-        az webapp deploy \
-          --name REPRPatternApi \
-          --resource-group testenv \
-          --src-path ./deploy.zip \
-          --type zip
-
+      - name: Deploy to Azure Web App
+        run: |
+          az webapp deploy \
+            --name REPRPatternApi \
+            --resource-group testenv \
+            --src-path ./deploy.zip \
+            --type zip
