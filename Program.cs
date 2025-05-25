@@ -134,9 +134,16 @@ app.Use(async (context, next) =>
 app.UseResponseCompression();
 app.UseResponseCaching();
 app.UseStatusCodePages();
+
+// Add before app.UseRouting()
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowAll");
-app.UseHttpsRedirection();
 
 // Configure API versioning
 var apiVersionSet = app.NewApiVersionSet()
