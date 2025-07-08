@@ -9,7 +9,12 @@ using REPRPatternApi.Models;
 using REPRPatternApi.Models.Requests;
 using REPRPatternApi.Models.Responses;
 using REPRPatternApi.Services;
+using REPRPatternApi.Application.Behaviors;
+using REPRPatternApi.Application.Validators;
 using Scalar.AspNetCore;
+using MediatR;
+using FluentValidation;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +37,20 @@ builder.Services.AddApiVersioning(options =>
         options.GroupNameFormat = "'v'V";
         options.SubstituteApiVersionInUrl = true;
     });
+
+// Add controllers with XML serialization support
+builder.Services.AddControllers()
+    .AddXmlSerializerFormatters()
+    .AddXmlDataContractSerializerFormatters();
+
+// Add MediatR
+builder.Services.AddMediatR(cfg => {
+    cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
+});
+
+// Add FluentValidation
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
 // Memory cache and distributed cache for response caching
 builder.Services.AddMemoryCache();
@@ -104,10 +123,22 @@ builder.Services.AddEndpoints(typeof(Program).Assembly);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApiDocument(config =>
 {
-    config.Title = "API Documentation";
+    config.Title = "REPR Pattern API Documentation";
     config.Version = "v1";
-    config.Description = "API Documentation using Scalar";
+    config.Description = "API Documentation demonstrating REPR pattern with XML/JSON content negotiation";
     config.DocumentName = "v1";
+    
+    // Include XML comments
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        config.PostProcess = document =>
+        {
+            document.Info.Title = "REPR Pattern API";
+            document.Info.Description = "Demonstrates REPR pattern with XML/JSON content negotiation using .NET 8";
+        };
+    }
 });
 
 var app = builder.Build();
@@ -144,6 +175,9 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("AllowAll");
+
+// Map controllers
+app.MapControllers();
 
 // Configure API versioning
 var apiVersionSet = app.NewApiVersionSet()
@@ -186,4 +220,7 @@ await app.RunAsync();
 [JsonSerializable(typeof(ProductsResponse))]
 [JsonSerializable(typeof(ErrorResponse))]
 [JsonSerializable(typeof(Dictionary<string, string[]>))]
+[JsonSerializable(typeof(WeatherForecast))]
+[JsonSerializable(typeof(WeatherForecast[]))]
+[JsonSerializable(typeof(WeatherForecastCollection))]
 public partial class AppJsonSerializerContext : JsonSerializerContext { }

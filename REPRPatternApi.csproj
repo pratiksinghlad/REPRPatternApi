@@ -13,6 +13,7 @@
     <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
     <UseHotReload>true</UseHotReload>
     <OutputPath>$(MSBuildProjectDirectory)\publish\$(RuntimeIdentifier)</OutputPath>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
  <!--Benefit: Enforces architectural rules at build time.
       Add a custom MSBuild task to validate project invariants (e.g., no banned namespaces).-->
@@ -31,6 +32,10 @@
     <PackageReference Include="NSwag.AspNetCore" Version="14.4.0" />
     <PackageReference Include="Polly" Version="8.5.2" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.2.5" />
+    <PackageReference Include="MediatR" Version="12.4.1" />
+    <PackageReference Include="FluentValidation" Version="11.9.2" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Xml" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
