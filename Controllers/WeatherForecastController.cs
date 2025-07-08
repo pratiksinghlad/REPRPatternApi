@@ -75,8 +75,6 @@ public class WeatherForecastController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetByDate(DateOnly date)
     {
-        _logger.LogInformation("Getting weather forecast for date {Date}", date);
-        
         var request = new GetWeatherForecastByDateQuery { Date = date };
         var forecast = await _mediator.Send(request);
         
