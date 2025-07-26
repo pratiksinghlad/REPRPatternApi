@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
+using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -96,6 +97,9 @@ builder.Services.AddExternalApiHttpClient(
     builder.Configuration.GetValue<string>("ExternalApiSettings:BaseUrl")!);
 
 builder.Services.AddScoped<IProductService, ProductService>();
+
+// Add FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Add endpoints from assembly
 builder.Services.AddEndpoints(typeof(Program).Assembly);
