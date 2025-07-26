@@ -168,17 +168,14 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => fa
 // Configure OpenAPI and documentation
 app.UseOpenApi(options => options.Path = "/openapi/v1.json");
 
-app.UseEndpoints(endpoints =>
+app.MapScalarApiReference(opt =>
 {
-    endpoints.MapScalarApiReference(opt =>
-    {
-        opt.Title = $"REPR Pattern Api Documentation - {app.Environment.EnvironmentName}";
-        opt.Theme = app.Environment.IsDevelopment() 
-            ? ScalarTheme.DeepSpace 
-            : app.Environment.IsStaging() 
-                ? ScalarTheme.BluePlanet 
-                : ScalarTheme.Purple;
-    });
+    opt.Title = $"REPR Pattern Api Documentation - {app.Environment.EnvironmentName}";
+    opt.Theme = app.Environment.IsDevelopment() 
+        ? ScalarTheme.DeepSpace 
+        : app.Environment.IsStaging() 
+            ? ScalarTheme.BluePlanet 
+            : ScalarTheme.Purple;
 });
 
 await app.RunAsync();

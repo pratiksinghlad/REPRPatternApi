@@ -35,13 +35,13 @@ public class ExternalApiService : IExternalApiService
             if (!httpResponse.IsSuccessStatusCode)
             {
                 //Logger.LogError("Http GET request (url: {0}) failed with an unsuccessful statuscode (Code: {1}). Response: {2}", url, httpResponse.StatusCode, responseContent);
-                return default;
+                return default(T)!;
             }
 
             var responseContent = await httpResponse.Content.ReadAsStringAsync();
-            if (string.IsNullOrEmpty(responseContent)) return default;
+            if (string.IsNullOrEmpty(responseContent)) return default(T)!;
 
-            return JsonConvert.DeserializeObject<T>(responseContent);
+            return JsonConvert.DeserializeObject<T>(responseContent) ?? default(T)!;
         }
         catch (Exception ex)
         {
