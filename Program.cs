@@ -1,10 +1,12 @@
 using System.IO.Compression;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
+using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using REPRPatternApi.Extensions;
+using REPRPatternApi.Extensions.Mongo;
 using REPRPatternApi.Models;
 using REPRPatternApi.Models.Requests;
 using REPRPatternApi.Models.Responses;
@@ -19,6 +21,9 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
     .AddJsonFile("secrets/appsettings.secrets.json", true, true)
     .AddEnvironmentVariables();
+
+// Register MongoDB client and repositories
+builder.Services.AddMongoDb(builder.Configuration);
 
 // API versioning
 builder.Services.AddApiVersioning(options =>
@@ -88,7 +93,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", 
         policy => policy.AllowAnyOrigin()
             .AllowAnyMethod()
-            .AllowAnyHeader());
+            .AllowAnyHeader()
+            .SetPreflightMaxAge(TimeSpan.FromHours(2)));
 });
 
 // Register application services
@@ -96,6 +102,9 @@ builder.Services.AddExternalApiHttpClient(
     builder.Configuration.GetValue<string>("ExternalApiSettings:BaseUrl")!);
 
 builder.Services.AddScoped<IProductService, ProductService>();
+
+// Add FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Add endpoints from assembly
 builder.Services.AddEndpoints(typeof(Program).Assembly);
@@ -164,17 +173,14 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => fa
 // Configure OpenAPI and documentation
 app.UseOpenApi(options => options.Path = "/openapi/v1.json");
 
-app.UseEndpoints(endpoints =>
+app.MapScalarApiReference(opt =>
 {
-    endpoints.MapScalarApiReference(opt =>
-    {
-        opt.Title = $"REPR Pattern Api Documentation - {app.Environment.EnvironmentName}";
-        opt.Theme = app.Environment.IsDevelopment() 
-            ? ScalarTheme.DeepSpace 
-            : app.Environment.IsStaging() 
-                ? ScalarTheme.BluePlanet 
-                : ScalarTheme.Purple;
-    });
+    opt.Title = $"REPR Pattern Api Documentation - {app.Environment.EnvironmentName}";
+    opt.Theme = app.Environment.IsDevelopment() 
+        ? ScalarTheme.DeepSpace 
+        : app.Environment.IsStaging() 
+            ? ScalarTheme.BluePlanet 
+            : ScalarTheme.Purple;
 });
 
 await app.RunAsync();
@@ -186,4 +192,8 @@ await app.RunAsync();
 [JsonSerializable(typeof(ProductsResponse))]
 [JsonSerializable(typeof(ErrorResponse))]
 [JsonSerializable(typeof(Dictionary<string, string[]>))]
+[JsonSerializable(typeof(REPRPatternApi.Models.Mongo.Requests.BlogPostCreateRequest))]
+[JsonSerializable(typeof(REPRPatternApi.Models.Mongo.Requests.BlogPostUpdateRequest))]
+[JsonSerializable(typeof(REPRPatternApi.Models.Mongo.Responses.BlogPostResponse))]
+[JsonSerializable(typeof(REPRPatternApi.Models.Mongo.Responses.BlogPostsResponse))]
 public partial class AppJsonSerializerContext : JsonSerializerContext { }
