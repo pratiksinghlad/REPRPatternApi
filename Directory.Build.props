@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <EnableSourceGeneration>true</EnableSourceGeneration>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <WarningsAsErrors>CS0169;CS0219;CS0162</WarningsAsErrors>
+    <UseHotReload>true</UseHotReload>
+    <OutputPath>$(MSBuildProjectDirectory)\publish\$(RuntimeIdentifier)</OutputPath>
+  </PropertyGroup>
+</Project>

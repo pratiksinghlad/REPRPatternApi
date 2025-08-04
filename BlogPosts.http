@@ -1,0 +1,53 @@
+### Create Blog Post
+POST {{host}}/api/v1/blogposts
+Content-Type: application/json
+
+{
+  "title": "My First Blog Post",
+  "body": "This is the content of my first blog post using MongoDB with embedded comments.",
+  "comments": [
+    {
+      "author": "John Doe",
+      "content": "Great first post!"
+    },
+    {
+      "author": "Jane Smith", 
+      "content": "Looking forward to more content."
+    }
+  ]
+}
+
+### Get All Blog Posts
+GET {{host}}/api/v1/blogposts
+
+### Get Blog Post by ID (replace with actual ID from create response)
+GET {{host}}/api/v1/blogposts/674f8a1b2f4d123456789abc
+
+### Update Blog Post (replace with actual ID)
+PUT {{host}}/api/v1/blogposts/674f8a1b2f4d123456789abc
+Content-Type: application/json
+
+{
+  "title": "Updated Blog Post Title",
+  "body": "This is the updated content with new embedded comments.",
+  "comments": [
+    {
+      "author": "John Doe",
+      "content": "Great updated post!"
+    },
+    {
+      "author": "Jane Smith", 
+      "content": "The updates look good."
+    },
+    {
+      "author": "Bob Wilson",
+      "content": "New comment on updated post."
+    }
+  ]
+}
+
+### Delete Blog Post (replace with actual ID)
+DELETE {{host}}/api/v1/blogposts/674f8a1b2f4d123456789abc
+
+### Variable for local development
+@host = https://localhost:7089
